@@ -20,7 +20,8 @@ orphans stored option values.
 
 | Provider | Status | What it owns |
 |---|---|---|
-| `Arthouse\Providers\SeoProvider` | v0.1.0 | SEO tab (title/description/keywords/share image) + a client-managed raw JSON-LD field (validated on save, safe-encoded on output) + OG/Twitter tags |
+| `Arthouse\Providers\SeoProvider` | v0.1.0 | **Raw SEO mode** — SEO tab + a client-managed raw JSON-LD field (validated on save, safe-encoded) + OG/Twitter tags |
+| `Arthouse\Providers\AssembledSeoProvider` | v0.2.0 | **Assembled SEO mode** — auto-built `TheaterEvent` from structured fields + live cast (`performers()`) + optional additions/override field |
 | Analytics / Segment | planned | Segment loader + consent modal, CMS write key (blank = disabled) |
 | Newsletter / Campaign Monitor | planned | CM subscribe endpoint (Routable), optional second list |
 
