@@ -6,6 +6,36 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-15
+
+### Added
+
+- **`Arthouse\Providers\SettingsHubProvider`** — the shared "Site Settings" hub: a
+  single ACF options page (`arthouse-site-settings`) + one empty field group
+  (`group_arthouse_site_settings`) that every site registers, so all sites get one
+  consolidated, top-tabbed settings screen instead of a scatter of options pages.
+  Other providers add their tab + fields to `SettingsHubProvider::GROUP_KEY` ad-hoc;
+  `ORDER_*` constants give predictable tab ordering. Keys are **canonical** and
+  identical across sites — the platform no longer accommodates per-site prefixes.
+  - Fields are sorted by `menu_order` via an `acf/load_fields` filter scoped to the
+    hub group, so the `ORDER_*` lanes are authoritative — tab order is identical on
+    every site regardless of which providers load or their acf/init priority (ACF
+    renders ad-hoc local fields in insertion order otherwise).
+
+### Changed (BREAKING)
+
+- **`Arthouse\Providers\SeoProvider` retrofitted to canonical keys.** Dropped the
+  `hubGroupKey()` and `keyPrefix()` abstract methods; the SEO tab now registers into
+  `SettingsHubProvider::GROUP_KEY` with canonical `field_arthouse_seo_*` keys (was
+  `field_{prefix}_*` per site). The class is no longer abstract — a child subclasses
+  it only to set `themeColor()` / `textDomain()`.
+  - **Migration required on adoption:** stored option **values** are keyed by name and
+    survive, but each field's key-reference row (`_options_{name}`) must be repointed to
+    the new canonical key, or ACF orphans the value in admin. See `UPGRADING.md`.
+  - `AssembledSeoProvider` is unaffected (it reads by name and registers no fields).
+
+[0.3.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.2.1...v0.3.0
+
 ## [0.2.1] - 2026-07-15
 
 ### Changed
@@ -35,7 +65,7 @@ annotated git tags (no `version` field in `composer.json`).
   - Child config: `organizerFallback()`, `themeColor()`, `performerPostType()`,
     `metaCommentLabel()`.
 
-[Unreleased]: https://github.com/vinnyrags/arthouse-kit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/vinnyrags/arthouse-kit/compare/v0.3.0...HEAD
 [0.2.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.1.0...v0.2.0
 
 ## [0.1.0] - 2026-07-15
