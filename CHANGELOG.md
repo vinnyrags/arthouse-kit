@@ -6,6 +6,15 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-15
+
+### Changed
+
+- Relax the PHP requirement `>=8.4` → `>=8.3` to match IX and Mythus (some ARTHOUSE
+  droplets run 8.3; the kit uses no 8.4-only syntax).
+
+[0.2.1]: https://github.com/vinnyrags/arthouse-kit/compare/v0.2.0...v0.2.1
+
 ## [0.2.0] - 2026-07-15
 
 ### Added
