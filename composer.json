@@ -1,0 +1,42 @@
+{
+  "name": "vincentragosta/arthouse-kit",
+  "description": "Shared, vendor-coupled providers for ARTHOUSE marketing sites on the Mythus + IX stack (SEO, Analytics/Segment, Newsletter/Campaign Monitor). Each provider is an abstract base a child theme subclasses with per-site config.",
+  "type": "library",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Vincent Ragosta"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packages.vincentragosta.io"
+    }
+  ],
+  "require": {
+    "php": ">=8.4",
+    "vincentragosta/mythus": "^1.0",
+    "vincentragosta/ix": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Arthouse\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Arthouse\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  }
+}
