@@ -1,0 +1,101 @@
+// Frontend + editor styles for arthouse/newsletter — the shared BEM signup form.
+//
+// Palette-agnostic: brand colours reference semantic --newsletter-* custom
+// properties which each child theme maps to its palette (see UPGRADING.md); the
+// neutral fallbacks keep it sane unmapped. The button inherits theme.json
+// elements.button styling via wp-element-button, so no gradient/padding/radius is
+// redeclared here. Spacing presets stay literal (shared across sites).
+//
+// The La MaMa opt-in + fineprint rules are inert on sites that don't render those
+// elements (only the optional-second-list sites do). The iOS Safari button-stretch
+// fix is deliberately NOT here — it alters the button box, so a site that wants it
+// layers it beside its token map (see UPGRADING.md).
+
+.wp-block-newsletter {
+    // Max-width lives on the wrapper. The doubled class (specificity 0,2,0) beats
+    // WP's `.is-layout-constrained > :where(...)` (0,1,0) content-size rule without
+    // depending on the per-site `wp-block-{theme}-newsletter` auto class, so it's
+    // site-agnostic.
+    &.wp-block-newsletter {
+        max-width: 600px;
+    }
+
+    .newsletter-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .newsletter-form__row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: var(--wp--preset--spacing--20);
+    }
+
+    .newsletter-form__input {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        background: var(--newsletter-input-bg, #fff);
+        border: 0;
+        border-radius: var(--wp--custom--border-radius);
+        padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+        color: var(--newsletter-input-text, currentColor);
+        font: inherit;
+
+        &::placeholder {
+            color: var(--newsletter-input-text, currentColor);
+            opacity: 1;
+        }
+    }
+
+    // Submit column wraps the button + required note (the required text is
+    // absolutely positioned so it doesn't extend the row).
+    .newsletter-form__submit {
+        flex: 0 0 auto;
+        position: relative;
+    }
+
+    .newsletter-form__button {
+        cursor: pointer;
+    }
+
+    // *Required note sits directly below the button, out of normal flow so it
+    // doesn't affect row height. Small print — intentionally off the type scale.
+    .newsletter-form__required {
+        position: absolute;
+        inset-block-start: 100%;
+        inset-inline-start: 0;
+        margin-block-start: 4px;
+        font-size: 11px;
+        line-height: 1.2;
+        opacity: 0.85;
+    }
+
+    // Consent fineprint — rendered only when the site provides fineprint copy.
+    .newsletter-form__fineprint {
+        margin-block: var(--wp--preset--spacing--30) 0;
+        font-size: var(--wp--preset--font-size--small);
+        line-height: 1.3;
+        color: var(--newsletter-fineprint-color, currentColor);
+    }
+
+    // La MaMa opt-in — rendered only when the site enables the second list. A block
+    // <label> with an inline checkbox (a flex label collapsed inside the flex-column
+    // form — a flex-container-as-flex-item quirk).
+    .newsletter-form__optin {
+        display: block;
+        margin-block-start: var(--wp--preset--spacing--20);
+        font-size: var(--wp--preset--font-size--small);
+        line-height: 1.3;
+        color: var(--newsletter-optin-color, currentColor);
+        cursor: pointer;
+
+        input[type="checkbox"] {
+            display: inline-block;
+            width: auto;
+            margin-inline-end: var(--wp--preset--spacing--20);
+            vertical-align: middle;
+            cursor: pointer;
+        }
+    }
+}

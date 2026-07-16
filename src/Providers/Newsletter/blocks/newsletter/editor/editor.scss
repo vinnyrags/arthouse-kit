@@ -1,0 +1,8 @@
+// Editor-only overrides for arthouse/newsletter.
+// Frontend styles in ../style.scss are loaded in the editor too via
+// add_editor_style; this file is for editor-context tweaks only.
+
+.wp-block-newsletter {
+    // Hint to authors that the form preview is non-interactive in the editor.
+    cursor: default;
+}

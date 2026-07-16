@@ -6,6 +6,43 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-16
+
+### Added
+
+- **`Arthouse\Providers\Newsletter\NewsletterProvider`** + **`…\Newsletter\Endpoints\NewsletterSubscribeEndpoint`**
+  — the shared Campaign Monitor signup, extracted from the near-identical per-site
+  copies on CBA/MF/AVFTB. Owns the `arthouse/newsletter` block, the
+  `/wp-json/theme/v1/newsletter/subscribe` REST endpoint (a `Mythus` `Routable`),
+  the frontend handler, and the "Campaign Monitor" tab on the Settings hub with
+  canonical `field_arthouse_newsletter_*` keys (no ACF value migration). Credentials
+  are CMS-only; a blank API key or list ID disables signups (fail-safe off) and skips
+  shipping the JS.
+  - **CM call is `wp_remote_post`** (CM v3.3 API, Basic `base64(apiKey:x)`), so the
+    `campaignmonitor/createsend-php` dependency is dropped — lighter and uniform.
+    Trade-off: CBA's richer CM error-message parsing is gone (the form only ever
+    showed a generic "sorry, try again").
+  - **JS global canonicalised to `arthouseNewsletter`** (was `cbaNewsletterConfig` /
+    `avftbNewsletter` / `mbfNewsletter`). One config-driven handler: `formId` picks
+    the form, `nonce` present → `X-WP-Nonce` / absent → `credentials: 'omit'`, and
+    the La MaMa opt-in field is only sent when its checkbox is present.
+  - **Optional second list (AVFTB La MaMa):** the endpoint always accepts a
+    best-effort `lamama_optin`, routing a second subscribe only when a
+    `campaign_monitor_lamama_list_id` option is set (inert everywhere else). A site
+    surfaces the field + checkbox by overriding `laMamaListField()` / `optinLabel()`
+    / `fineprint()`; those feed the block via `NewsletterProvider::BLOCK_CONTEXT_FILTER`
+    (copy stays in the subclass — no per-instance ACF/DB migration).
+  - **Block SCSS is palette-agnostic** (semantic `--newsletter-*` props with neutral
+    fallbacks) and **site-agnostic** — the max-width uses a doubled `.wp-block-newsletter`
+    selector instead of the per-site `wp-block-{theme}-newsletter` auto class, so the
+    block can register under the canonical `arthouse/newsletter` name (a site renames
+    its stored block instances via `search-replace`; see UPGRADING.md). Provider JS/SCSS
+    compile into the child `dist/` via IX's `extraProviderDirs`.
+  - **Config surface** (thin subclass): `textDomain()`, `formId()`, `sendsNonce()`,
+    `apiKeyFieldType()`, `laMamaListField()`, `optinLabel()`, `fineprint()`.
+
+[0.6.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.5.0...v0.6.0
+
 ## [0.5.0] - 2026-07-16
 
 ### Added

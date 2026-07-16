@@ -1,0 +1,34 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "arthouse/newsletter",
+    "title": "Newsletter Signup",
+    "category": "design",
+    "icon": "email",
+    "description": "Email signup form wired to the /wp-json/theme/v1/newsletter/subscribe REST endpoint. Server-rendered so the editor preview matches the frontend exactly.",
+    "keywords": ["newsletter", "email", "signup", "subscribe"],
+    "supports": {
+        "html": false,
+        "anchor": true,
+        "align": ["left", "center", "right"],
+        "spacing": {
+            "margin": true
+        }
+    },
+    "attributes": {
+        "placeholder": {
+            "type": "string",
+            "default": "Your email address here"
+        },
+        "submitLabel": {
+            "type": "string",
+            "default": "Sign Up"
+        },
+        "requiredLabel": {
+            "type": "string",
+            "default": "*Required"
+        }
+    },
+    "textdomain": "arthouse-kit",
+    "render": "file:./render.php"
+}
