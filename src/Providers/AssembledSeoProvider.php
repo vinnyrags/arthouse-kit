@@ -82,7 +82,7 @@ abstract class AssembledSeoProvider extends Provider
     public function outputMetaTags(): void
     {
         $description = $this->getOption('meta_description');
-        $keywords    = $this->getOption('meta_keywords');
+        $keywords    = $this->getOption('keywords');
         $canonical   = $this->getCanonicalUrl();
         $ogImage     = $this->getOption('og_image');
         $name        = (string) get_bloginfo('name');
@@ -155,7 +155,7 @@ abstract class AssembledSeoProvider extends Provider
     {
         $description = $this->getOption('meta_description');
         $images      = array_values(array_filter([
-            $this->getOption('schema_poster'),
+            $this->getOption('schema_image'),
             $this->getOption('og_image'),
         ]));
 

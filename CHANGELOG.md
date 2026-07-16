@@ -6,6 +6,18 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-16
+
+### Changed (BREAKING for AssembledSeoProvider consumers)
+
+- **`AssembledSeoProvider` reads canonical field names**: `meta_keywords` → `keywords`
+  and `schema_poster` → `schema_image`, aligning the assembled-mode option names with
+  the raw `SeoProvider` and across sites. Adopting sites must rename the stored option
+  value rows (`options_meta_keywords` → `options_keywords`, `options_schema_poster` →
+  `options_schema_image`) — a value-move, not just a key repoint. See `UPGRADING.md`.
+
+[0.4.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.3.0...v0.4.0
+
 ## [0.3.0] - 2026-07-15
 
 ### Added
@@ -65,7 +77,7 @@ annotated git tags (no `version` field in `composer.json`).
   - Child config: `organizerFallback()`, `themeColor()`, `performerPostType()`,
     `metaCommentLabel()`.
 
-[Unreleased]: https://github.com/vinnyrags/arthouse-kit/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/vinnyrags/arthouse-kit/compare/v0.4.0...HEAD
 [0.2.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.1.0...v0.2.0
 
 ## [0.1.0] - 2026-07-15
