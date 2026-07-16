@@ -4,6 +4,44 @@ Pre-1.0, minor versions may include breaking changes; they're called out here wi
 migration note. Adoption is per-child-theme and reversible (re-pin + `composer update`,
 restore the in-tree provider).
 
+## Adopting the Analytics provider (from an in-theme `AnalyticsProvider`)
+
+The kit's `Arthouse\Providers\Analytics\AnalyticsProvider` is the shared Segment +
+Consent Manager modal. Adoption is per-child-theme and reversible (re-pin +
+`composer update`, restore the in-tree provider + assets).
+
+**Prerequisites.** The site is already on the Settings hub with canonical
+`field_arthouse_analytics_*` keys (shipped with the hub in 0.3.0), so **no ACF value
+migration is needed** — only code moves. The Segment write key must be set in the CMS
+(Site Settings → Analytics) on **every environment** before removing any in-theme
+default; a blank key disables Segment + the modal.
+
+### Steps (per site, staging first)
+
+1. Pin `"vincentragosta/arthouse-kit": "^0.5"` and `composer update
+   vincentragosta/arthouse-kit`. (For local iteration, a Composer `path` repo
+   pointed at the kit source works; remove it before committing.)
+2. **Build config:** in the child's `scripts/build-providers.config.js`, add
+   `extraProviderDirs: [ <path to> vendor/vincentragosta/arthouse-kit/src/Providers ]`
+   so the kit's Analytics JS/SCSS compile into the child `dist/` (needs IX ≥ the
+   `extraProviderDirs` release). Output paths are identical to the in-theme provider
+   (`dist/css/analytics.css`, `dist/js/analytics/index.js`).
+3. **PHP:** replace the child's `AnalyticsProvider` with a thin subclass of
+   `Arthouse\Providers\Analytics\AnalyticsProvider` (optionally overriding
+   `textDomain()` / `shouldLoad()`), or register the kit class directly. Delete the
+   in-theme `assets/` (JS + SCSS) — they now come from the kit.
+4. **Brand token map:** in a globally-loaded stylesheet (e.g. the Theme provider's
+   `index.scss`), add a `:root` map pointing the semantic `--consent-*` props at the
+   site palette. Only list deviations from the kit fallbacks. Minimum is usually
+   surface / text / font / heading-font / accent; add `--consent-accent-hover`,
+   `--consent-heading-size`, `--consent-button-size`, `--consent-accent-contrast`,
+   `--consent-link[-hover]`, `--consent-heading-weight`, `--consent-body-size`,
+   `--consent-shadow`, `--consent-radius`, `--consent-overlay` as the site requires.
+5. **Verify on staging** (the env gate means local dev never loads Segment): the
+   consent modal renders in the site palette, Segment loads + fires (EU/UK sees the
+   modal; non-EU auto-consents), and a blank write key disables both. Then ship to
+   prod.
+
 ## 0.2.x → 0.3.0 — canonical keys + Settings hub (BREAKING)
 
 0.3.0 moves to **canonical, cross-site ACF keys**: the raw `SeoProvider` no longer

@@ -1,0 +1,111 @@
+// Segment Consent Manager modal — shared ARTHOUSE markup + structure, unopinionated.
+//
+// Every brand-specific value is a semantic `--consent-*` custom property with a
+// neutral fallback, so this file is palette-agnostic. Each child theme ships a
+// short `:root { --consent-*: … }` map (see UPGRADING.md) pointing the tokens at
+// its own `--wp--preset--*` palette; a token left unset falls back to a sane
+// default (or another token), so a map only lists what actually deviates.
+//
+// Layout rhythm uses the shared WP spacing presets directly (`--wp--preset--
+// spacing--*` exist on every site) — only colour/font/size/weight roles, which
+// diverge by preset *name* between sites, are tokenised here.
+
+.consent-container-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    padding: var(--wp--preset--spacing--30);
+    background: var(--consent-overlay, rgba(0, 0, 0, 0.55));
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+// Vertical rhythm via margin-block-start on each non-first child (matches the
+// project's no-margin-block-end convention).
+.consent-form {
+    max-inline-size: 28rem;
+    padding: var(--wp--preset--spacing--40);
+    background: var(--consent-surface, #fff);
+    color: var(--consent-text, #111);
+    font-family: var(--consent-font, inherit);
+    border-radius: var(--consent-radius, 0.5rem);
+    box-shadow: var(--consent-shadow, 0 1rem 3rem rgba(0, 0, 0, 0.35));
+
+    p {
+        margin: 0;
+        margin-block-start: var(--wp--preset--spacing--20);
+        font-size: var(--consent-body-size, inherit);
+        line-height: 1.5;
+    }
+}
+
+.consent-heading {
+    font-family: var(--consent-heading-font, inherit);
+    font-size: var(--consent-heading-size, 1.5rem);
+    font-weight: var(--consent-heading-weight, inherit);
+    text-transform: uppercase;
+    color: var(--consent-heading-color, var(--consent-text, #111));
+}
+
+.consent-actions {
+    display: flex;
+    gap: var(--wp--preset--spacing--20);
+    margin-block-start: var(--wp--preset--spacing--30);
+}
+
+.consent-button {
+    flex: 1;
+    padding-block: var(--wp--preset--spacing--20);
+    padding-inline: var(--wp--preset--spacing--30);
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid var(--consent-text, #111);
+    color: var(--consent-text, #111);
+    font-family: var(--consent-font, inherit);
+    font-size: var(--consent-button-size, 0.875rem);
+    font-weight: var(--consent-button-weight, inherit);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+        background: var(--consent-text, #111);
+        color: var(--consent-surface, #fff);
+    }
+
+    &.consent-button-primary {
+        background: var(--consent-accent, #111);
+        border-color: var(--consent-accent, #111);
+        color: var(--consent-accent-contrast, var(--consent-surface, #fff));
+
+        &:hover,
+        &:focus-visible {
+            background: var(--consent-accent-hover, var(--consent-accent, #111));
+            border-color: var(--consent-accent-hover, var(--consent-accent, #111));
+        }
+    }
+}
+
+.consent-options-link {
+    display: inline-block;
+    margin-block-start: var(--wp--preset--spacing--30);
+    font-size: 0.8125rem;
+    text-decoration: underline;
+    color: var(--consent-link, var(--consent-accent, #111));
+
+    &:hover,
+    &:focus-visible {
+        color: var(--consent-link-hover, var(--consent-text, #111));
+    }
+}
+
+.target-container {
+    position: fixed;
+    z-index: 9998;
+}

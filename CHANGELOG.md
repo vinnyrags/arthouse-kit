@@ -6,6 +6,24 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-16
+
+### Added
+
+- **`Arthouse\Providers\Analytics\AnalyticsProvider`** — the shared Segment loader
+  + Segment Consent Manager modal, extracted from the (byte-identical bar the JS
+  global name + palette) per-site copies on CBA/MF/AVFTB. Loads on staging + prod
+  only; the Segment write key is **CMS-only** (Site Settings → Analytics), blank
+  disables Segment + the modal (fail-safe off). Registers its tab ad-hoc onto the
+  Settings hub with canonical `field_arthouse_analytics_*` keys (no data migration
+  for sites already on those keys). The JS global is canonicalised to
+  `arthouseAnalytics`; the modal SCSS is palette-agnostic (semantic `--consent-*`
+  props with neutral fallbacks) — each child ships a short `:root` token map
+  (see `UPGRADING.md`). Provider JS/SCSS compile into the child `dist/` via IX's
+  new `extraProviderDirs` build config; no vendor-path asset URLs.
+
+[0.5.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.4.0...v0.5.0
+
 ## [0.4.0] - 2026-07-16
 
 ### Changed (BREAKING for AssembledSeoProvider consumers)
