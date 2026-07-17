@@ -15,11 +15,10 @@ use WP_REST_Response;
  * Credentials come from the CMS (Site Settings → Campaign Monitor). The call goes
  * out via wp_remote_post to CM's v3.3 API — no createsend-php dependency.
  *
- * The endpoint is generic across every site: it always accepts an optional
- * `lamama_optin` flag, and routes a **best-effort** second subscribe to the
- * La MaMa list only when both the flag is set and a `campaign_monitor_lamama_list_id`
- * option is configured. Sites without that option (the common case) simply never
- * trigger it. A La MaMa failure never fails the primary signup.
+ * The endpoint is generic across every site. When the CMS configures a partner
+ * opt-in (a `campaign_monitor_optin_list_id`) and the request's `optin` flag is set,
+ * it routes a **best-effort** second subscribe to that list — a failure there never
+ * fails the primary signup, and it's inert on sites that leave the opt-in blank.
  *
  * Response is a plain 200 with { ok, status }; the frontend only reads `ok`.
  */
@@ -55,7 +54,7 @@ class NewsletterSubscribeEndpoint extends Endpoint
                 'sanitize_callback' => 'sanitize_email',
                 'validate_callback' => static fn ($value): bool => is_email((string) $value) !== false,
             ],
-            'lamama_optin' => [
+            'optin' => [
                 'required'          => false,
                 'type'              => 'boolean',
                 'default'           => false,
@@ -78,13 +77,14 @@ class NewsletterSubscribeEndpoint extends Endpoint
         // Primary list — success is measured against this.
         $code = $this->subscribeToList($apiKey, $listId, $email);
 
-        // La MaMa opt-in — best-effort second subscribe to a separate list in the
-        // same CM account. A failure here must NOT fail the primary signup, so its
-        // result is not surfaced. Inert unless the site configures the list.
-        if ((bool) $request->get_param('lamama_optin')) {
-            $lamamaListId = $this->getOption('campaign_monitor_lamama_list_id');
-            if ($lamamaListId !== '') {
-                $this->subscribeToList($apiKey, $lamamaListId, $email);
+        // Partner opt-in — best-effort second subscribe to a separate list in the
+        // same CM account, when the box was ticked and the CMS configures its list.
+        // A failure here must NOT fail the primary signup, so its result is ignored.
+        // Inert on sites that leave the opt-in list blank.
+        if ((bool) $request->get_param('optin')) {
+            $optinListId = $this->getOption('campaign_monitor_optin_list_id');
+            if ($optinListId !== '') {
+                $this->subscribeToList($apiKey, $optinListId, $email);
             }
         }
 

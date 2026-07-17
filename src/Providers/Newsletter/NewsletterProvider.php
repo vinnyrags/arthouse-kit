@@ -12,7 +12,7 @@ use IX\Providers\Provider;
  * Shared newsletter signup for ARTHOUSE sites — Campaign Monitor, AJAX, no redirect.
  *
  * Extracted from the (near-identical) per-site NewsletterProvider copies on
- * CBA/AVFTB/MF. Owns the whole flow:
+ * CBA/MF/AVFTB. Owns the whole base flow:
  *   - The arthouse/newsletter block (server-rendered BEM form).
  *   - The /wp-json/theme/v1/newsletter/subscribe REST endpoint
  *     ({@see NewsletterSubscribeEndpoint}), which subscribes to Campaign Monitor
@@ -25,11 +25,18 @@ use IX\Providers\Provider;
  * Credentials are CMS-only (Site Settings → Campaign Monitor); a blank API key or
  * list ID disables signups (fail-safe off) and skips shipping the frontend JS.
  *
+ * The kit is deliberately generic — it carries no per-show concepts. The optional
+ * partner opt-in (a second Campaign Monitor list) + consent fineprint are a generic,
+ * CMS-driven capability: the label, the second list ID, and the fineprint copy are
+ * ACF fields on the Campaign Monitor hub tab (registered here for every site), all
+ * blank by default. A site turns the opt-in on purely by filling them in the CMS —
+ * no per-show content or wiring in code. The block renders them (see render.php) and
+ * the endpoint routes the best-effort second subscribe (see NewsletterSubscribeEndpoint).
+ *
  * A site can use this class directly — the only required per-site variance is the
- * brand `--newsletter-*` token map in the child's stylesheet — or subclass it to
- * override the small config surface: {@see textDomain()}, {@see formId()},
- * {@see sendsNonce()}, {@see apiKeyFieldType()}, and the La MaMa second-list opt-in
- * ({@see laMamaListField()} / {@see optinLabel()} / {@see fineprint()}).
+ * brand `--newsletter-*` token map — or subclass it to override the small config
+ * surface: {@see textDomain()}, {@see formId()}, {@see sendsNonce()},
+ * {@see apiKeyFieldType()}.
  *
  * MF keeps its own block markup + SCSS: it subclasses this for the PHP/endpoint/JS
  * but ships its own blocks/newsletter/, which overrides this one via the child-first
@@ -37,9 +44,6 @@ use IX\Providers\Provider;
  */
 class NewsletterProvider extends Provider
 {
-    /** Filter render.php runs the block context through so a subclass can inject copy. */
-    public const BLOCK_CONTEXT_FILTER = 'arthouse/newsletter/block_context';
-
     /**
      * The shared server-rendered signup block (blocks/newsletter/).
      *
@@ -65,15 +69,18 @@ class NewsletterProvider extends Provider
     {
         add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendScripts']);
         add_action('acf/init', [$this, 'registerSettingsFields'], 20);
-        add_filter(self::BLOCK_CONTEXT_FILTER, [$this, 'filterBlockContext'], 10, 2);
 
         parent::register();
     }
 
     /**
      * Add the "Campaign Monitor" tab to the shared Settings hub, ad-hoc, with
-     * canonical field_arthouse_newsletter_* keys. The La MaMa list field is only
-     * registered when the site enables it ({@see laMamaListField()}).
+     * canonical field_arthouse_newsletter_* keys.
+     *
+     * The primary API key + list ID drive signups. The optional partner opt-in
+     * (label + second list) and consent fineprint are generic, CMS-driven, and blank
+     * by default — a site enables the opt-in purely by filling them in, so no
+     * per-show content lives in code.
      */
     public function registerSettingsFields(): void
     {
@@ -87,29 +94,9 @@ class NewsletterProvider extends Provider
         acf_add_local_field(['key' => 'field_arthouse_tab_newsletter', 'parent' => $parent, 'label' => __('Campaign Monitor', $domain), 'name' => '', 'type' => 'tab', 'placement' => 'top', 'menu_order' => $order]);
         acf_add_local_field(['key' => 'field_arthouse_newsletter_campaign_monitor_api_key', 'parent' => $parent, 'menu_order' => $order + 1, 'label' => 'Campaign Monitor API Key', 'name' => 'campaign_monitor_api_key', 'type' => $this->apiKeyFieldType(), 'instructions' => 'Server-side API key for Campaign Monitor. Used to add subscribers via the /newsletter/subscribe REST endpoint. Leave blank to disable signups.']);
         acf_add_local_field(['key' => 'field_arthouse_newsletter_campaign_monitor_list_id', 'parent' => $parent, 'menu_order' => $order + 2, 'label' => 'Campaign Monitor List ID', 'name' => 'campaign_monitor_list_id', 'type' => 'text', 'instructions' => 'Hex ID of the list new subscribers are added to. Needed for signups to work.']);
-
-        if ($this->laMamaListField() !== null) {
-            acf_add_local_field(['key' => 'field_arthouse_newsletter_campaign_monitor_lamama_list_id', 'parent' => $parent, 'menu_order' => $order + 3, 'label' => 'Campaign Monitor List ID — La MaMa', 'name' => 'campaign_monitor_lamama_list_id', 'type' => 'text', 'instructions' => 'La MaMa\'s Campaign Monitor List ID. When the footer opt-in checkbox is ticked, the address is also subscribed to this list. Leave blank until it is provided — the checkbox is then captured but not routed.']);
-        }
-    }
-
-    /**
-     * Inject the La MaMa opt-in label + consent fineprint into the block context.
-     *
-     * The shared block renders those only when non-empty, so the base (no La MaMa)
-     * emits just the form. Kept on a filter, not a block attribute, so the copy
-     * lives in the subclass (code) — no per-instance ACF/DB migration.
-     *
-     * @param array<string, mixed> $context
-     * @param array<string, mixed> $attributes
-     * @return array<string, mixed>
-     */
-    public function filterBlockContext(array $context, array $attributes): array
-    {
-        $context['optin_label'] = $this->optinLabel();
-        $context['fineprint']   = $this->fineprint();
-
-        return $context;
+        acf_add_local_field(['key' => 'field_arthouse_newsletter_optin_label', 'parent' => $parent, 'menu_order' => $order + 3, 'label' => 'Partner Opt-in — Checkbox Label', 'name' => 'campaign_monitor_optin_label', 'type' => 'text', 'instructions' => 'Optional. Shows a second opt-in checkbox above the fineprint (e.g. a co-marketing partner). Leave blank to hide the opt-in entirely.']);
+        acf_add_local_field(['key' => 'field_arthouse_newsletter_optin_list_id', 'parent' => $parent, 'menu_order' => $order + 4, 'label' => 'Partner Opt-in — Campaign Monitor List ID', 'name' => 'campaign_monitor_optin_list_id', 'type' => 'text', 'instructions' => 'The Campaign Monitor List ID subscribed to when the opt-in box is ticked. Leave blank to capture the tick without routing it anywhere yet.']);
+        acf_add_local_field(['key' => 'field_arthouse_newsletter_fineprint', 'parent' => $parent, 'menu_order' => $order + 5, 'label' => 'Consent Fineprint', 'name' => 'newsletter_fineprint', 'type' => 'textarea', 'rows' => 2, 'instructions' => 'Optional consent copy shown under the form (e.g. "By signing up, you agree to receive marketing emails."). Leave blank to hide.']);
     }
 
     /**
@@ -191,28 +178,6 @@ class NewsletterProvider extends Provider
     protected function apiKeyFieldType(): string
     {
         return 'text';
-    }
-
-    /**
-     * The ACF option name of the optional La MaMa second list, or null to disable.
-     * When set, the field is registered on the hub and the endpoint routes a
-     * best-effort second subscribe when the opt-in checkbox is ticked.
-     */
-    protected function laMamaListField(): ?string
-    {
-        return null;
-    }
-
-    /** Opt-in checkbox label. Non-empty → the block renders the La MaMa checkbox. */
-    protected function optinLabel(): string
-    {
-        return '';
-    }
-
-    /** Consent fineprint under the form. Non-empty → the block renders it. */
-    protected function fineprint(): string
-    {
-        return '';
     }
 
     private function getOption(string $key, string $default = ''): string

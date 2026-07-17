@@ -75,17 +75,26 @@ test catches. The child's `scripts/build-providers.config.js` already lists the 
 2. **PHP:** replace the in-theme `NewsletterProvider` with a thin subclass of
    `Arthouse\Providers\Newsletter\NewsletterProvider`, overriding only what differs:
    `textDomain()`; `formId()` + `sendsNonce()` for a nonce-less anonymous form (MF:
-   `'subForm'` / `false`); `apiKeyFieldType()` (`'password'` for AVFTB); and, for the
-   La MaMa second list, `laMamaListField()` + `optinLabel()` + `fineprint()` (AVFTB).
-   Delete the in-theme `Endpoints/`, `assets/js/`, and — in shared-block mode — the
-   whole `blocks/newsletter/`. In own-block mode, keep `blocks/newsletter/`.
+   `'subForm'` / `false`); `apiKeyFieldType()` (`'password'` for AVFTB). Delete the
+   in-theme `Endpoints/`, `assets/js/`, and — in shared-block mode — the whole
+   `blocks/newsletter/`. In own-block mode, keep `blocks/newsletter/`. **The partner
+   opt-in + fineprint need no code** — see step 3a.
 3. **Brand token map:** in a globally-loaded stylesheet (the Theme provider's
    `index.scss`), add a `:root` map for the `--newsletter-*` props the site uses
-   (`--newsletter-input-text`, `--newsletter-input-bg`, and for a second-list site
+   (`--newsletter-input-text`, `--newsletter-input-bg`, and for an opt-in site
    `--newsletter-optin-color` / `--newsletter-fineprint-color`). A site that wants the
    iOS Safari button-stretch fix layers it here too (`.newsletter-form__submit {
    display: flex; align-items: stretch } .newsletter-form__button { height: 100% }`) —
    it's intentionally not in the shared SCSS because it alters the button box.
+3a. **Partner opt-in / fineprint (CMS, no code).** The optional second-list opt-in and
+   consent fineprint are generic, CMS-driven fields on the Campaign Monitor tab
+   (registered by the kit for every site, blank = off). To enable them, fill in Site
+   Settings → Campaign Monitor: **Partner Opt-in — Checkbox Label**, **Partner Opt-in
+   — Campaign Monitor List ID**, and **Consent Fineprint**. The block renders the
+   checkbox (`name="optin"`) + fineprint from those values and the endpoint routes the
+   best-effort second subscribe. A site that previously stored a value under the old
+   `campaign_monitor_lamama_list_id` name moves it to `campaign_monitor_optin_list_id`
+   (a value re-entry, or a one-line `wp option` / ACF update on each env).
 4. **Shared-block mode only — rename stored block instances.** On a DB backup, run
    `wp search-replace '{theme}/newsletter' 'arthouse/newsletter' --all-tables-with-prefix`
    (or scoped to the content-partial CPT). The block lives in the footer content

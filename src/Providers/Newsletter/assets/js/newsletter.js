@@ -15,7 +15,9 @@
 //   - When nonce is present it's sent as X-WP-Nonce. When it's null the request is
 //     sent with credentials: 'omit' (no cookie) so a logged-in admin with a stale
 //     page-cached nonce isn't 403'd by WP's cookie check before our handler runs.
-//   - The La MaMa opt-in checkbox is optional; its value is only sent when present.
+//   - Any additional named control on the form (e.g. a CMS-driven partner opt-in
+//     checkbox) is included in the POST body automatically — the kit doesn't need
+//     to know field names.
 
 (function () {
     var config = window.arthouseNewsletter;
@@ -34,9 +36,6 @@
             return;
         }
 
-        // Optional La MaMa opt-in checkbox — absent on most sites, so guard it.
-        var optin = form.querySelector('input[name="lamama_optin"]');
-
         var emailRegex = /^([\w!#$%&'*+\-/=?^`{|}~]+\.)*[\w!#$%&'*+\-/=?^`{|}~]+@((((([a-z0-9]{1}[a-z0-9\-]{0,62}[a-z0-9]{1})|[a-z])\.)+[a-z]{2,6})|(\d{1,3}\.){3}\d{1,3}(:\d{1,5})?)$/i;
 
         form.addEventListener('submit', function (event) {
@@ -48,7 +47,14 @@
                 return;
             }
 
-            var body = optin ? { email: email, lamama_optin: optin.checked } : { email: email };
+            // email plus any other named control the site's form adds (opt-in, etc.)
+            var body = { email: email };
+            form.querySelectorAll('[name]').forEach(function (el) {
+                if (!el.name || el.name === 'email') {
+                    return;
+                }
+                body[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+            });
 
             var options = {
                 method: 'POST',

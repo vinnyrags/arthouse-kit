@@ -6,6 +6,39 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-16
+
+### Changed
+
+- **Newsletter partner opt-in is now generic + CMS-driven — no per-show content in
+  the kit.** The optional second-list opt-in (used by AVFTB for La MaMa) is no longer
+  a per-site config surface baked into code. The kit registers three generic ACF
+  fields on the Campaign Monitor hub tab for **every** site, blank by default:
+  `campaign_monitor_optin_label` (checkbox label — blank hides the opt-in),
+  `campaign_monitor_optin_list_id` (the second CM list), and `newsletter_fineprint`
+  (consent copy under the form). A site enables the opt-in purely by filling these in
+  the CMS — **zero theme code, no "La MaMa" or any show specifics in the kit.**
+  - `render.php` builds the opt-in checkbox (`name="optin"`) + fineprint from those
+    values into a whitespace-safe output slot; the endpoint routes the best-effort
+    second subscribe when `optin` is set and `campaign_monitor_optin_list_id` is
+    configured; the JS auto-includes any named control, so the opt-in flows through
+    without the kit knowing field names.
+  - **Removed** the `laMamaListField()` / `optinLabel()` / `fineprint()` config
+    methods and the `campaign_monitor_lamama_list_id` field (nothing consumed them
+    yet). A site migrating a stored La MaMa list value moves it to
+    `campaign_monitor_optin_list_id` (see UPGRADING).
+
+### Fixed
+
+- **Newsletter block twig whitespace (supersedes 0.6.1).** Replaced the opt-in/
+  fineprint `{% if %}` conditionals with a single `{{ extra_fields | raw }}` output
+  slot built in `render.php`. An output tag leaves surrounding whitespace untouched
+  regardless of Timber's `trim_blocks`/`lstrip_blocks`, so the rendered markup is
+  byte-identical to the pre-kit per-site output whether the extra fields are present
+  or absent (0.6.1's plain-`{% if %}` approach still left stray indentation).
+
+[0.7.0]: https://github.com/vinnyrags/arthouse-kit/compare/v0.6.1...v0.7.0
+
 ## [0.6.1] - 2026-07-16
 
 ### Fixed
