@@ -6,6 +6,20 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-16
+
+### Fixed
+
+- **Newsletter block twig whitespace.** The La MaMa opt-in/fineprint conditionals
+  used Twig left-trim (`{%- … %}`), which — on top of Timber's `trim_blocks` /
+  `lstrip_blocks` — over-collapsed the newline between the form's closing `</div>`
+  and `</form>` when the section was absent. Switched to plain `{% if %}` / `{% endif %}`
+  (the whitespace-neutral pattern the `required_label` block already used), so the
+  rendered markup is byte-identical to the pre-kit per-site output in both the
+  absent (CBA) and present (AVFTB) cases.
+
+[0.6.1]: https://github.com/vinnyrags/arthouse-kit/compare/v0.6.0...v0.6.1
+
 ## [0.6.0] - 2026-07-16
 
 ### Added

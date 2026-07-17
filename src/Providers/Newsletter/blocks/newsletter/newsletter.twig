@@ -21,14 +21,14 @@
                 {% endif %}
             </div>
         </div>
-        {%- if optin_label %}
+        {% if optin_label %}
         <label class="newsletter-form__optin">
             <input type="checkbox" name="lamama_optin" value="yes" checked />
             <span>{{ optin_label }}</span>
         </label>
-        {%- endif %}
-        {%- if fineprint %}
+        {% endif %}
+        {% if fineprint %}
         <p class="newsletter-form__fineprint">{{ fineprint }}</p>
-        {%- endif %}
+        {% endif %}
     </form>
 </div>
