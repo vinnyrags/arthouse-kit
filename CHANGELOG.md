@@ -6,6 +6,32 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-17
+
+### Added
+
+- **Sync admin surface — the Migration tab that drives the Mythus sync engine.**
+  Two providers under `Arthouse\Providers\Sync`:
+
+  - `SyncSettingsProvider` — adds a **Migration** tab to the shared Settings hub
+    (ad-hoc, canonical `field_arthouse_migration_*` keys) with env-aware one-way
+    "Pull from Staging/Production" buttons + a recent-pulls activity log. The tab
+    only appears where a pull is possible (`local`/`staging`), never on production.
+    Its `POST /wp-json/theme/v1/sync/pull` route (manage_options) shells out via
+    `Mythus\Support\Sync\SyncCommandBuilder::build()`.
+  - `SyncCliProvider` — registers the `wp mythus sync-from <staging|production>`
+    CLI command (`Mythus\Support\Sync\SyncCommand`).
+
+  Generalized from the AVFTB-native `Providers/Sync` (whose keys/classes were
+  `field_avftb_*` / `avftb-sync-*`); the engine itself now lives in Mythus 1.3.
+  A site enables Sync purely by configuring the `mythus/sync/sources` filter and
+  registering these two providers — no per-site UI/CLI code.
+
+### Changed
+
+- **Bumped the `vincentragosta/mythus` constraint to `^1.3`** — the Sync providers
+  depend on the `Mythus\Support\Sync\*` engine shipped in Mythus 1.3.0.
+
 ## [0.7.0] - 2026-07-16
 
 ### Changed

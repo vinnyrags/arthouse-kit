@@ -34,6 +34,7 @@ class SettingsHubProvider extends Provider
     public const ORDER_ANALYTICS = 30;
     public const ORDER_NEWSLETTER = 40;
     public const ORDER_SOCIAL    = 50;
+    public const ORDER_MIGRATION = 90;
 
     public function register(): void
     {
