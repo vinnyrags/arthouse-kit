@@ -6,6 +6,17 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-17
+
+### Fixed
+
+- **Migration tab no longer collides with a child theme's "Advanced" tab.**
+  `ORDER_MIGRATION` was `90` — the same `menu_order` lane child themes
+  conventionally use for their own developer/"Advanced" Site Settings tab (e.g.
+  AVFTB's typekit tab). Two tabs tied at 90 sort unstably in ACF, so the Migration
+  message field interleaved *under* the Advanced tab. Moved `ORDER_MIGRATION` to
+  `100` so the ops-only Migration tab always sorts last, clear of that lane.
+
 ## [0.8.0] - 2026-07-17
 
 ### Added

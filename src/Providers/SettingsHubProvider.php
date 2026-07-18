@@ -34,7 +34,9 @@ class SettingsHubProvider extends Provider
     public const ORDER_ANALYTICS = 30;
     public const ORDER_NEWSLETTER = 40;
     public const ORDER_SOCIAL    = 50;
-    public const ORDER_MIGRATION = 90;
+    // 100 keeps the ops-only Migration tab last, clear of the menu_order-90 lane
+    // that child themes conventionally use for their own "Advanced" developer tab.
+    public const ORDER_MIGRATION = 100;
 
     public function register(): void
     {
