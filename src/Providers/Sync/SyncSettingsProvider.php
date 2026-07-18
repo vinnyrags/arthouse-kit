@@ -6,6 +6,7 @@ namespace Arthouse\Providers\Sync;
 
 use Arthouse\Providers\SettingsHubProvider;
 use IX\Providers\Provider;
+use Mythus\Support\Sync\SyncCommand;
 use Mythus\Support\Sync\SyncCommandBuilder;
 use Mythus\Support\Sync\SyncEnv;
 use WP_REST_Request;
@@ -74,7 +75,10 @@ class SyncSettingsProvider extends Provider
         register_rest_route(self::REST_NS, self::REST_ROUTE, [
             'methods'             => 'POST',
             'permission_callback' => static fn (): bool => current_user_can('manage_options'),
-            'args'                => ['source' => ['required' => true, 'type' => 'string']],
+            'args'                => [
+                'source' => ['required' => true, 'type' => 'string'],
+                'force'  => ['type' => 'boolean', 'default' => false],
+            ],
             'callback'            => [$this, 'handlePull'],
         ]);
     }
@@ -96,10 +100,24 @@ class SyncSettingsProvider extends Provider
 
         $user  = wp_get_current_user();
         $actor = ($user && $user->user_login) ? $user->user_login : 'unknown';
+        $force = (bool) $request->get_param('force');
 
         @set_time_limit(600);
-        $cmd = SyncCommandBuilder::build($wp, $source, $actor, rtrim(ABSPATH, '/'));
+        $cmd = SyncCommandBuilder::build($wp, $source, $actor, rtrim(ABSPATH, '/'), $force);
         exec($cmd, $out, $code);
+
+        // The staleness guard blocked it (source is behind this env). Surface it as a
+        // distinct, non-error outcome so the button can offer an informed override
+        // rather than treat it as a failure.
+        if ($code === SyncCommand::EXIT_STALE) {
+            return new WP_REST_Response([
+                'ok'     => false,
+                'stale'  => true,
+                'source' => $source,
+                'env'    => SyncEnv::current(),
+                'reason' => trim(implode("\n", $out)),
+            ], 409);
+        }
 
         return new WP_REST_Response([
             'ok'     => $code === 0,
@@ -128,30 +146,45 @@ class SyncSettingsProvider extends Provider
             var nonce    = <?php echo wp_json_encode($nonce); ?>;
             var log      = document.getElementById('arthouse-sync-log');
             var spinner  = document.querySelector('.arthouse-sync-spinner');
+
+            function setBusy(busy) {
+                document.querySelectorAll('.arthouse-sync-btn').forEach(function (b) { b.disabled = busy; });
+                if (spinner) { spinner.classList.toggle('is-active', busy); }
+            }
+
+            function pull(source, force) {
+                setBusy(true);
+                if (log) { log.classList.add('is-visible'); log.textContent = 'Pulling from ' + source + '… (this can take a minute)'; }
+                return fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+                    body: JSON.stringify({ source: source, force: !!force })
+                })
+                .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+                .then(function (res) {
+                    var b = res.body || {};
+                    // The staleness guard blocked it — offer an informed override.
+                    if (b.stale) {
+                        setBusy(false);
+                        if (window.confirm((b.reason || (source + ' is behind this environment.')) + '\n\nPull anyway and DISCARD this environment’s newer content?')) {
+                            return pull(source, true);
+                        }
+                        if (log) { log.textContent = 'Cancelled — nothing was changed.'; }
+                        return;
+                    }
+                    if (log) { log.textContent = (b.ok ? '✓ Done — reload to see the updated log.' : '✗ Failed' + (b.reason ? ': ' + b.reason : '') + '.') + '\n\n' + (b.output || b.reason || ''); }
+                    setBusy(false);
+                })
+                .catch(function (e) { if (log) { log.textContent = '✗ Request error: ' + e; } setBusy(false); });
+            }
+
             document.querySelectorAll('.arthouse-sync-btn').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     var source = btn.getAttribute('data-source');
                     if (!window.confirm('This OVERWRITES this environment’s database and uploads with ' + source + '. Continue?')) {
                         return;
                     }
-                    document.querySelectorAll('.arthouse-sync-btn').forEach(function (b) { b.disabled = true; });
-                    if (spinner) { spinner.classList.add('is-active'); }
-                    if (log) { log.classList.add('is-visible'); log.textContent = 'Pulling from ' + source + '… (this can take a minute)'; }
-                    fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
-                        body: JSON.stringify({ source: source })
-                    })
-                    .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
-                    .then(function (res) {
-                        var b = res.body || {};
-                        if (log) { log.textContent = (b.ok ? '✓ Done — reload to see the updated log.' : '✗ Failed' + (b.reason ? ': ' + b.reason : '') + '.') + '\n\n' + (b.output || b.reason || ''); }
-                    })
-                    .catch(function (e) { if (log) { log.textContent = '✗ Request error: ' + e; } })
-                    .finally(function () {
-                        document.querySelectorAll('.arthouse-sync-btn').forEach(function (b) { b.disabled = false; });
-                        if (spinner) { spinner.classList.remove('is-active'); }
-                    });
+                    pull(source, false);
                 });
             });
         })();

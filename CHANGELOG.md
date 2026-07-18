@@ -6,6 +6,27 @@ annotated git tags (no `version` field in `composer.json`).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-17
+
+### Added
+
+- **Migration tab can now override the staleness guard in-place.** When a pull is
+  blocked because this environment has newer content than the source, the button
+  no longer dead-ends at an error: the REST endpoint returns a distinct `stale`
+  outcome (HTTP 409, carrying the guard's explanation), and the button shows a
+  second confirm — "Pull anyway and DISCARD this environment's newer content?" — that
+  re-issues the pull with `force: true`. Cancel leaves everything untouched.
+
+  The accidental-click protection is intact: a plain click still never forces; the
+  override only appears after the guard fires and requires an explicit second
+  confirm that names what would be discarded. Requires the Mythus 1.4 engine
+  (`SyncCommandBuilder::build($force)` + `SyncCommand::EXIT_STALE`); the
+  `force` REST arg defaults to false.
+
+### Changed
+
+- Bumped the `vincentragosta/mythus` constraint to `^1.4`.
+
 ## [0.8.1] - 2026-07-17
 
 ### Fixed
